@@ -6,20 +6,21 @@ vim.g.netrw_liststyle = 1
 vim.g.netrw_bufsettings = "noma nomod nu nowrap ro nobl"
 vim.g.netrw_keepdir = 0
 
-vim.opt.clipboard = "unnamedplus" -- copy/paste to system clipboard
-vim.opt.swapfile = false -- don't create swap files
-vim.opt.showmode = false -- don't show mode on cmd line, we have statusline for that
-vim.opt.laststatus = 3 -- global statusline
-vim.opt.signcolumn = "yes" -- always show sign column
-vim.opt.termguicolors = true -- enable true colors
-vim.opt.timeoutlen = 400 -- time to wait for a mapped sequence to complete
-vim.opt.undofile = true -- persistent undo
-vim.opt.splitbelow = true
-vim.opt.splitright = true
-vim.opt.updatetime = 250 -- interval for writing swap file to disk, also used by gitsigns
-vim.opt.cursorline = true
-
 local o = vim.opt
+
+o.clipboard = "unnamedplus" -- copy/paste to system clipboard
+o.swapfile = false -- don't create swap files
+o.showmode = false -- don't show mode on cmd line, we have statusline for that
+o.laststatus = 3 -- global statusline
+o.signcolumn = "yes" -- always show sign column
+o.termguicolors = true -- enable true colors
+o.timeoutlen = 400 -- time to wait for a mapped sequence to complete
+o.undofile = true -- persistent undo
+o.splitbelow = true
+o.splitright = true
+o.updatetime = 250 -- interval for writing swap file to disk, also used by gitsigns
+o.cursorline = true
+
 o.cmdheight = 1
 o.showmatch = true
 o.smarttab = true
@@ -35,10 +36,10 @@ o.mousescroll = "ver:1,hor:2"
 -- o.scrolloff=9999
 
 -- Folding
-vim.opt.foldlevel = 20
-vim.opt.foldenable = true
-vim.opt.foldmethod = "expr"
-vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+o.foldlevel = 20
+o.foldenable = true
+o.foldmethod = "expr"
+o.foldexpr = "nvim_treesitter#foldexpr()"
 
 vim.keymap.set("n", "<C-d>", "<C-d>zz", {desc = "Center cursor after moving down half-page"})
 
@@ -47,15 +48,15 @@ vim.keymap.set("n", "<C-d>", "<C-d>zz", {desc = "Center cursor after moving down
 -- vim.opt.spelllang = "en_us"
 
 -- Indenting
-vim.opt.expandtab = true
-vim.opt.shiftwidth = 2
-vim.opt.smartindent = true
-vim.opt.tabstop = 2
-vim.opt.softtabstop = 2
+o.expandtab = true
+o.shiftwidth = 2
+o.smartindent = true
+o.tabstop = 2
+o.softtabstop = 2
 
 -- Search
-vim.opt.ignorecase = true
--- vim.opt.smartcase = true
+o.ignorecase = true
+o.smartcase = true
 
 -- Numbers
 o.number = true
