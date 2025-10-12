@@ -6,12 +6,12 @@ vim.g.netrw_liststyle = 1
 vim.g.netrw_bufsettings = "noma nomod nu nowrap ro nobl"
 vim.g.netrw_keepdir = 0
 
-vim.opt.clipboard = "unnamed" -- copy/paste to system clipboard
+vim.opt.clipboard = "unnamedplus" -- copy/paste to system clipboard
 vim.opt.swapfile = false -- don't create swap files
 vim.opt.showmode = false -- don't show mode on cmd line, we have statusline for that
 vim.opt.laststatus = 3 -- global statusline
 vim.opt.signcolumn = "yes" -- always show sign column
-vim.opt.termguicolors = false -- disable true colors
+vim.opt.termguicolors = true -- enable true colors
 vim.opt.timeoutlen = 400 -- time to wait for a mapped sequence to complete
 vim.opt.undofile = true -- persistent undo
 vim.opt.splitbelow = true
@@ -88,12 +88,10 @@ local default_disable_plugins = {
   "zipPlugin",
   "tutor",
   "rplugin",
-  "syntax",
   "synmenu",
   "optwin",
   "compiler",
   "bugreport",
-  "ftplugin",
 }
 
 for _, plugin in pairs(default_disable_plugins) do

@@ -1,9 +1,12 @@
 return {
-  'mrjones2014/smart-splits.nvim',
-  build = './kitty/install-kittens.bash',
+  "mrjones2014/smart-splits.nvim",
+  build = function()
+    if vim.fn.executable("kitty") == 1 then
+      vim.system({ "bash", "kitty/install-kittens.bash" }):wait()
+    end
+  end,
   config = function()
-    require('smart-splits').setup({})
-
+    require("smart-splits").setup({})
     vim.keymap.set('n', '<A-h>', require('smart-splits').resize_left)
     vim.keymap.set('n', '<A-j>', require('smart-splits').resize_down)
     vim.keymap.set('n', '<A-k>', require('smart-splits').resize_up)
@@ -13,5 +16,6 @@ return {
     vim.keymap.set('n', '<C-j>', require('smart-splits').move_cursor_down)
     vim.keymap.set('n', '<C-k>', require('smart-splits').move_cursor_up)
     vim.keymap.set('n', '<C-l>', require('smart-splits').move_cursor_right)
-  end
+  end,
 }
+
