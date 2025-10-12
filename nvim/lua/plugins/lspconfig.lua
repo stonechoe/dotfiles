@@ -13,7 +13,13 @@ local servers = {
   dartls = {},
   pylsp = {},
   pbls = {},
-  metals = {},
+  metals = {
+    settings = {
+      metals = {
+        defaultBspToBuildTool = true,
+      },
+    },
+  },
   rust_analyzer = {
     settings = {
       ["rust-analyzer"] = {
