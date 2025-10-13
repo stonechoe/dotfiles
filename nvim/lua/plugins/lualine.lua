@@ -12,7 +12,7 @@ end
 
 return {
   "nvim-lualine/lualine.nvim",
-  event = "UiEnter",
+  event = "UIEnter",
   config = function()
     require("lualine").setup {
       options = {
