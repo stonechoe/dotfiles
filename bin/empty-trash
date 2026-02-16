@@ -1,4 +1,10 @@
 #!/bin/zsh
+
+if [[ "$(uname)" != "Darwin" ]]; then
+  echo "empty-trash: macOS only" >&2
+  exit 1
+fi
+
 AUTO_YES=0
 
 # Parse flags
