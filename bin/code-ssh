@@ -1,11 +1,22 @@
 #!/bin/sh
 
-# Open a remote folder in VS Code via SSH
-# Usage: code-ssh host:path  or  code-ssh user@host:path
-# Examples:
-#   code-ssh lab:~/code/proj1
-#   code-ssh user@server:~/code/proj1
-#   code-ssh lab:/opt/app
+
+show_help() {
+  cat <<'EOF'
+Open a remote folder in VS Code via SSH
+
+Usage: code-ssh [user@]host:path
+
+Examples:
+  code-ssh host:~/relative/path
+  code-ssh user@host:~/relative/path
+  code-ssh host:/absolute/path
+EOF
+}
+
+case "$1" in
+  -h|--help) show_help; exit 0 ;;
+esac
 
 if ! command -v code >/dev/null 2>&1; then
   echo "error: 'code' command not found in PATH" >&2
