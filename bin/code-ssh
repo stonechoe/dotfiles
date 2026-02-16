@@ -57,4 +57,4 @@ case "$resolved" in
     ;;
 esac
 
-code --folder-uri "vscode-remote://ssh-remote+${host}${resolved}"
+code --remote=ssh-remote+"$host" "$path"
