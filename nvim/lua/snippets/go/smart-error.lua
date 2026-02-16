@@ -7,7 +7,7 @@ local d = ls.dynamic_node
 local c = ls.choice_node
 local snippet_from_nodes = ls.sn
 
-local ts_locals = require "nvim-treesitter.locals"
+local ts_locals = require "nvim-treesitter.local"
 local ts_utils = require "nvim-treesitter.ts_utils"
 local get_node_text = vim.treesitter.get_node_text
 
