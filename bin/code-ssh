@@ -5,18 +5,31 @@ show_help() {
   cat <<'EOF'
 Open a remote folder in VS Code via SSH
 
-Usage: code-ssh [user@]host:path
+Usage: code-ssh [-l|-i] [user@]host:path
+
+Options:
+  -i, --interactive   Use an interactive shell to resolve the remote path
+  -l, --login         Use a login shell to resolve the remote path
 
 Examples:
   code-ssh host:~/relative/path
   code-ssh user@host:~/relative/path
   code-ssh host:/absolute/path
+  code-ssh -l host:~/relative/path
+  code-ssh -i host:~/relative/path
 EOF
 }
 
-case "$1" in
-  -h|--help) show_help; exit 0 ;;
-esac
+shell_flags=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -h|--help) show_help; exit 0 ;;
+    -i|--interactive) shell_flags="-i"; shift ;;
+    -l|--login) shell_flags="-l"; shift ;;
+    -*) echo "error: unknown option '$1'" >&2; exit 1 ;;
+    *) break ;;
+  esac
+done
 
 if ! command -v code >/dev/null 2>&1; then
   echo "error: 'code' command not found in PATH" >&2
@@ -25,7 +38,7 @@ if ! command -v code >/dev/null 2>&1; then
 fi
 
 if [ -z "$1" ]; then
-  echo "usage: code-ssh [user@]host:path" >&2
+  echo "usage: code-ssh [-l|-i] [user@]host:path" >&2
   exit 1
 fi
 
@@ -39,7 +52,14 @@ if [ -z "$path" ]; then
 fi
 
 # Resolve the path on the remote host (expand ~ and verify it's a directory)
-resolved=$(ssh "$host" "path=\"$path\"; eval path=\"$path\"; if [ -d \"\$path\" ]; then echo \"\$path\"; elif [ -e \"\$path\" ]; then echo \"NOT_DIR\"; else echo \"NOT_FOUND\"; fi" 2>/dev/null)
+marker="__CODE_SSH_RESULT__"
+resolve_cmd="path=\"$path\"; eval path=\"\$path\"; if [ -d \"\$path\" ]; then echo ${marker}\$(cd \"\$path\" && pwd)${marker}; elif [ -e \"\$path\" ]; then echo ${marker}NOT_DIR${marker}; else echo ${marker}NOT_FOUND${marker}; fi"
+if [ -n "$shell_flags" ]; then
+  raw=$(ssh "$host" "exec \$SHELL $shell_flags -c '$resolve_cmd'" 2>/dev/null)
+else
+  raw=$(ssh "$host" "$resolve_cmd" 2>/dev/null)
+fi
+resolved=$(printf '%s\n' "$raw" | sed -n "s/.*${marker}\(.*\)${marker}.*/\1/p")
 
 if [ $? -ne 0 ] || [ -z "$resolved" ]; then
   echo "error: could not connect to '$host'" >&2
@@ -57,4 +77,4 @@ case "$resolved" in
     ;;
 esac
 
-code --remote=ssh-remote+"$host" "$path"
+code --remote=ssh-remote+"$host" "$resolved"
