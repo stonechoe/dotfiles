@@ -1,0 +1,49 @@
+#!/bin/sh
+
+# Open a remote folder in VS Code via SSH
+# Usage: code-ssh host:path  or  code-ssh user@host:path
+# Examples:
+#   code-ssh lab:~/code/proj1
+#   code-ssh user@server:~/code/proj1
+#   code-ssh lab:/opt/app
+
+if ! command -v code >/dev/null 2>&1; then
+  echo "error: 'code' command not found in PATH" >&2
+  echo "Install it from VS Code: Cmd+Shift+P -> 'Shell Command: Install code command in PATH'" >&2
+  exit 1
+fi
+
+if [ -z "$1" ]; then
+  echo "usage: code-ssh [user@]host:path" >&2
+  exit 1
+fi
+
+# Split input on the first ':'
+host="${1%%:*}"
+path="${1#*:}"
+
+if [ -z "$path" ]; then
+  echo "error: no path specified (expected [user@]host:path)" >&2
+  exit 1
+fi
+
+# Resolve the path on the remote host (expand ~ and verify it's a directory)
+resolved=$(ssh "$host" "path=\"$path\"; eval path=\"$path\"; if [ -d \"\$path\" ]; then echo \"\$path\"; elif [ -e \"\$path\" ]; then echo \"NOT_DIR\"; else echo \"NOT_FOUND\"; fi" 2>/dev/null)
+
+if [ $? -ne 0 ] || [ -z "$resolved" ]; then
+  echo "error: could not connect to '$host'" >&2
+  exit 1
+fi
+
+case "$resolved" in
+  NOT_FOUND)
+    echo "error: '$path' does not exist on '$host'" >&2
+    exit 1
+    ;;
+  NOT_DIR)
+    echo "error: '$path' on '$host' is not a directory" >&2
+    exit 1
+    ;;
+esac
+
+code --folder-uri "vscode-remote://ssh-remote+${host}${resolved}"
