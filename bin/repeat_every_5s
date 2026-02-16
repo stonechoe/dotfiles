@@ -1,0 +1,8 @@
+#!/bin/zsh
+while true; do
+  clear
+  echo "[$(date)] 실행 중: $*"
+  echo "-----------------------------"
+  zsh -c "$*"
+  sleep 5
+done

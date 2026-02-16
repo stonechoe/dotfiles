@@ -1,0 +1,65 @@
+#!/bin/bash
+set -eu
+
+# Check if required commands are available
+if ! command -v magick &> /dev/null; then
+    echo "Error: 'magick' is not installed. Please install it using 'brew install imagemagick'."
+    exit 1
+fi
+
+if ! command -v gs &> /dev/null; then
+    echo "Error: 'gs' (Ghostscript) is not installed. Please install it using 'brew install ghostscript'."
+    exit 1
+fi
+
+# Check if the input file is provided
+if [ -z "${1:-}" ]; then
+    echo "Usage: $0 <file.pdf> [output.pdf]"
+    exit 1
+fi
+
+# Assign input and output file names
+input_file="$1"
+output_file="${2:-$(basename "$input_file" .pdf).scan.pdf}"
+
+# Check if input file exists
+if [ ! -f "$input_file" ]; then
+    echo "Error: Input file '$input_file' does not exist."
+    exit 1
+fi
+
+# Create a unique temporary file
+temp_file=$(mktemp).pdf
+
+# Ensure the temporary file is deleted on exit or error
+trap 'rm -f "$temp_file"' EXIT
+
+# Perform the image conversion with magick
+magick -density 150 "$input_file" -colorspace gray -linear-stretch 1%x5% \
+    -contrast-stretch 1%x5% -attenuate 0.15 +noise Gaussian \
+    -unsharp 0x1+1.5+0.02 -rotate 0.1 "$temp_file"
+
+# Check if magick command was successful
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to process image with 'magick'."
+    exit 1
+fi
+
+# Use Ghostscript to optimize and create final output PDF
+command gs -dSAFER -dBATCH -dNOPAUSE -dNOCACHE -sDEVICE=pdfwrite \
+    -sColorConversionStrategy=LeaveColorUnchanged -dAutoFilterColorImages=true \
+    -dAutoFilterGrayImages=true -dDownsampleMonoImages=true \
+    -dDownsampleGrayImages=true -dDownsampleColorImages=true \
+    -sOutputFile="$output_file" "$temp_file"
+
+# Check if gs command was successful
+if [ $? -eq 0 ]; then
+    echo "Successfully created scanned version: $output_file"
+else
+    echo "Error: Failed to create scanned version with Ghostscript."
+    exit 1
+fi
+
+# Display original and scanned file sizes
+echo "Original file size: $(ls -lh "$input_file" | awk '{print $5}')"
+echo "Scanned file size: $(ls -lh "$output_file" | awk '{print $5}')"

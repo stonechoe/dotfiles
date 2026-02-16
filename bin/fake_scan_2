@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Assign input and output file names
+input_file="$1"
+output_file="${2:-$(basename "$input_file" .pdf).scan.pdf}"
+temp_dir="./temp_images"
+
+# 임시 디렉토리 생성
+mkdir -p "$temp_dir"
+
+# PDF를 개별 이미지로 분할
+magick -density 150 "$input_file" "$temp_dir/page_%03d.png"
+
+# 각 이미지를 랜덤 왜곡 및 모자이크 처리
+for img in "$temp_dir"/*.png; do
+  # 랜덤 파라미터 생성
+  wave_amplitude=$(awk -v min=2 -v max=10 'BEGIN{srand(); print min+rand()*(max-min)}')
+  wave_length=$(awk -v min=10 -v max=50 'BEGIN{srand(); print min+rand()*(max-min)}')
+  implode_factor=$(awk -v min=-0.2 -v max=0.2 'BEGIN{srand(); print min+rand()*(max-min)}')
+  spread_factor=$(awk -v min=2 -v max=5 'BEGIN{srand(); print min+rand()*(max-min)}')
+
+  # 왜곡 및 모자이크 효과 적용
+  magick "$img" \
+    -wave "$wave_amplitude"x"$wave_length" \
+    -implode "$implode_factor" \
+    -spread "$spread_factor" \
+    "$img"
+done
+
+# 개별 이미지를 다시 PDF로 합치기
+magick "$temp_dir/page_*.png" "$output_file"
+
+# 임시 디렉토리 삭제
+rm -rf "$temp_dir"
+
+echo "Randomly distorted and mosaic PDF saved as $output_file"

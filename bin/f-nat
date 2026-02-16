@@ -1,0 +1,4 @@
+#!/bin/zsh
+set +m
+fd --type f --strip-cwd-prefix | fzf
+exit 0

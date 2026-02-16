@@ -1,0 +1,29 @@
+#!/bin/zsh
+AUTO_YES=0
+
+# Parse flags
+if [[ "$1" == "-y" ]]; then
+  AUTO_YES=1
+fi
+
+TRASH_COUNT=$(osascript -e 'tell application "Finder" to count of items in trash')
+
+if [[ "$TRASH_COUNT" -eq 0 ]]; then
+  echo "🗑️ Trash is already empty."
+  exit 0
+fi
+
+echo "Trash contains $TRASH_COUNT item(s)."
+
+if [[ "$AUTO_YES" -ne 1 ]]; then
+  printf "Empty Trash? (y/N): "
+  read -r CONFIRM
+
+  case "$CONFIRM" in
+    y|Y) ;;
+    *) echo "❌ Cancelled."; exit 1 ;;
+  esac
+fi
+
+osascript -e 'tell application "Finder" to empty trash'
+echo "✅ Trash emptied."
