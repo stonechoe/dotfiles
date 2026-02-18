@@ -1,10 +1,10 @@
 #!/bin/zsh
-skip_hidden=0
+include_hidden=0
 
 # Parse flags
 while [[ "$1" == -* ]]; do
   case "$1" in
-    --no-hidden) skip_hidden=1; shift ;;
+    --hidden) include_hidden=1; shift ;;
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
 done
@@ -13,10 +13,10 @@ done
 start_dir="${1:-.}"
 
 # search for .git directories
-if [[ "$skip_hidden" -eq 1 ]]; then
-  find "$start_dir" -name ".*" -not -name ".git" -prune -o -type d -name ".git" -print
-else
+if [[ "$include_hidden" -eq 1 ]]; then
   find "$start_dir" -type d -name ".git"
+else
+  find "$start_dir" -mindepth 1 -name ".*" -not -name ".git" -prune -o -type d -name ".git" -print
 fi | while read gitdir; do
     echo "Git repository found: ${gitdir%/.git}"
 done
