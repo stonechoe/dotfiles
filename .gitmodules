@@ -1,0 +1,4 @@
+[submodule "nvim"]
+	path = nvim
+	url = https://github.com/stonechoe/nvim-config.git
+	branch = mine
