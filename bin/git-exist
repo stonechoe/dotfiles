@@ -5,7 +5,7 @@ include_hidden=0
 while [[ "$1" == -* ]]; do
   case "$1" in
     --hidden) include_hidden=1; shift ;;
-    *) echo "Unknown option: $1"; exit 1 ;;
+    *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
 done
 
@@ -18,5 +18,5 @@ if [[ "$include_hidden" -eq 1 ]]; then
 else
   find "$start_dir" -mindepth 1 -name ".*" -not -name ".git" -prune -o -type d -name ".git" -print
 fi | while read gitdir; do
-    echo "Git repository found: ${gitdir%/.git}"
+    echo "${gitdir%/.git}"
 done
