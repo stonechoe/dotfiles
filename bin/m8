@@ -1,0 +1,23 @@
+#!/bin/zsh
+
+mtmux() {
+  local session="${1:-multi}"
+  shift || true
+  local hosts=("$@")
+  local n="${#hosts[@]}"
+
+  if [ "$n" -eq 0 ]; then
+    echo "usage: mtmux [session-name] host1 host2 ..." >&2
+    return 1
+  fi
+
+  tmux new-session -d -s "$session" "ssh ${hosts[1]}"
+  for ((i = 2; i <= n; i++)); do
+    tmux split-window -t "$session" -d "ssh ${hosts[i]}"
+    tmux select-layout -t "$session" tiled >/dev/null
+  done
+  tmux setw -t "$session" synchronize-panes on
+  tmux attach -t "$session"
+}
+
+mtmux setup a1 a2 a3 a4 a5 a6 a7 a8
