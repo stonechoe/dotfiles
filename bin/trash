@@ -1,0 +1,80 @@
+#!/bin/zsh
+
+if [[ "$(uname)" != "Darwin" ]]; then
+  echo "trash: macOS only" >&2
+  exit 1
+fi
+
+if [[ ! -x /usr/bin/trash ]]; then
+  echo "trash: /usr/bin/trash not found" >&2
+  exit 1
+fi
+
+EMPTY=0
+AUTO_YES=0
+HELP=0
+LIST=0
+
+for arg in "$@"; do
+  case "$arg" in
+    -h|--help) HELP=1 ;;
+    -e|--empty) EMPTY=1 ;;
+    -l|--list) LIST=1 ;;
+    -y) AUTO_YES=1 ;;
+  esac
+done
+
+if [[ "$HELP" -eq 1 ]]; then
+  cat <<'EOF'
+Usage: trash [OPTIONS] [FILE...]
+
+Move files to the Trash, or empty the Trash.
+
+Extended options (added on top of /usr/bin/trash):
+  -e, --empty    Empty the Trash instead of moving files
+  -l, --list     List items currently in the Trash
+  -y             Skip confirmation prompt when used with --empty
+  -h, --help     Show this help message
+
+When none of the above flags are given, all arguments are forwarded
+to /usr/bin/trash as-is. Its own options are listed below.
+
+EOF
+  echo "System /usr/bin/trash options:"
+  /usr/bin/trash --help 2>&1 | sed 's/^/  /'
+  exit 0
+fi
+
+if [[ "$LIST" -eq 1 ]]; then
+  if [[ -z "$(ls -A ~/.Trash 2>/dev/null)" ]]; then
+    echo "trash: Trash is empty."
+    exit 0
+  fi
+  ls -lAh ~/.Trash
+  exit 0
+fi
+
+if [[ "$EMPTY" -eq 0 ]]; then
+  exec /usr/bin/trash "$@"
+fi
+
+TRASH_COUNT=$(osascript -e 'tell application "Finder" to count of items in trash')
+
+if [[ "$TRASH_COUNT" -eq 0 ]]; then
+  echo "trash: Trash is already empty."
+  exit 0
+fi
+
+echo "trash: $TRASH_COUNT item(s) in Trash."
+
+if [[ "$AUTO_YES" -ne 1 ]]; then
+  printf "Empty Trash? [y/N] "
+  read -r CONFIRM
+  case "$CONFIRM" in
+    y|Y) ;;
+    *) echo "trash: cancelled."; exit 1 ;;
+  esac
+fi
+
+osascript -e 'tell application "Finder" to empty trash'
+echo "trash: Trash emptied."
