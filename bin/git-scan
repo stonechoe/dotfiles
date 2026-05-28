@@ -1,0 +1,32 @@
+#!/bin/zsh
+all=0
+
+usage() {
+  cat <<EOF
+Usage: git-scan [-a] [DIR]
+
+Scan for git repositories under DIR (default: current directory).
+
+Options:
+  -a, --all     include hidden directories
+  -h, --help    show this help message
+EOF
+}
+
+while [[ "$1" == -* ]]; do
+  case "$1" in
+    -a|--all) all=1; shift ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "Unknown option: $1" >&2; exit 1 ;;
+  esac
+done
+
+start_dir="${1:-.}"
+
+if [[ "$all" -eq 1 ]]; then
+  fd --hidden --prune --type d --glob '.git' "$start_dir"
+else
+  fd --hidden --prune --type d --glob '.git' "$start_dir" | grep -Ev '(^|/)\.[^/]+/'
+fi | while IFS= read -r line; do
+  print "${line%/.git}"
+done
