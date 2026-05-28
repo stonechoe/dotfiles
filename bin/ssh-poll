@@ -1,0 +1,114 @@
+#!/bin/sh
+
+show_help() {
+  cat <<'EOF'
+Retry ssh until a connection succeeds.
+
+Usage: ssh-poll [options] -- [ssh arguments...]
+       ssh-poll host
+       ssh-poll user@host
+       ssh-poll --interval 2 -- user@host uptime
+
+Options:
+  --interval seconds        Seconds to wait between attempts (default: 5)
+  --connect-timeout seconds SSH ConnectTimeout value (default: 5)
+  --retry-all               Retry every non-zero ssh exit status
+  -h, --help                Show this help
+
+By default, ssh-poll retries only exit status 255, which OpenSSH uses for
+connection/authentication/client errors. If ssh connects and a remote command
+returns a non-zero status, ssh-poll exits with that status.
+EOF
+}
+
+interval=5
+connect_timeout=5
+retry_all=0
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -h|--help)
+      show_help
+      exit 0
+      ;;
+    --interval)
+      shift
+      if [ -z "$1" ]; then
+        echo "error: --interval requires a value" >&2
+        exit 1
+      fi
+      interval="$1"
+      shift
+      ;;
+    --connect-timeout)
+      shift
+      if [ -z "$1" ]; then
+        echo "error: --connect-timeout requires a value" >&2
+        exit 1
+      fi
+      connect_timeout="$1"
+      shift
+      ;;
+    --retry-all)
+      retry_all=1
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+    --*)
+      echo "error: unknown option '$1'" >&2
+      exit 1
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if [ $# -eq 0 ]; then
+  echo "usage: ssh-poll [options] -- [ssh arguments...]" >&2
+  exit 1
+fi
+
+case "$interval" in
+  ''|*[!0-9]*)
+    echo "error: --interval must be a positive integer" >&2
+    exit 1
+    ;;
+  0)
+    echo "error: --interval must be greater than 0" >&2
+    exit 1
+    ;;
+esac
+
+case "$connect_timeout" in
+  ''|*[!0-9]*)
+    echo "error: --connect-timeout must be a positive integer" >&2
+    exit 1
+    ;;
+  0)
+    echo "error: --connect-timeout must be greater than 0" >&2
+    exit 1
+    ;;
+esac
+
+attempt=1
+while :; do
+  printf '[ssh-poll] attempt %s: ssh %s\n' "$attempt" "$*" >&2
+  ssh -o ConnectTimeout="$connect_timeout" "$@"
+  status=$?
+
+  if [ "$status" -eq 0 ]; then
+    exit 0
+  fi
+
+  if [ "$retry_all" -ne 1 ] && [ "$status" -ne 255 ]; then
+    exit "$status"
+  fi
+
+  printf '[ssh-poll] ssh exited with %s; retrying in %ss\n' "$status" "$interval" >&2
+  sleep "$interval"
+  attempt=$((attempt + 1))
+done
