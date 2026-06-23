@@ -1,0 +1,76 @@
+#!/bin/sh
+
+show_help() {
+  cat <<'EOF'
+Run rsync repeatedly at a fixed interval.
+
+Usage: rsync-poll [options] -- [rsync arguments...]
+       rsync-poll [options] [rsync arguments...]
+       rsync-poll -az choems@lab:~/code/dynajs-paper/icse27/main.pdf ~/dynajs.pdf
+
+Options:
+  --interval seconds, -i seconds  Seconds to wait between runs (default: 1)
+  -h, --help                      Show this help
+
+Any remaining arguments are passed directly to rsync.
+EOF
+}
+
+interval=1
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -h|--help)
+      show_help
+      exit 0
+      ;;
+    -i|--interval)
+      shift
+      if [ -z "$1" ]; then
+        echo "error: --interval requires a value" >&2
+        exit 1
+      fi
+      interval="$1"
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if [ $# -eq 0 ]; then
+  echo "usage: rsync-poll [options] -- [rsync arguments...]" >&2
+  exit 1
+fi
+
+case "$interval" in
+  ''|*[!0-9]*)
+    echo "error: --interval must be a positive integer" >&2
+    exit 1
+    ;;
+  0)
+    echo "error: --interval must be greater than 0" >&2
+    exit 1
+    ;;
+esac
+
+attempt=1
+while :; do
+  printf '[rsync-poll] attempt %s: rsync %s\n' "$attempt" "$*" >&2
+  rsync "$@"
+  status=$?
+
+  if [ "$status" -ne 0 ]; then
+    printf '[rsync-poll] rsync exited with %s; retrying in %ss\n' "$status" "$interval" >&2
+  else
+    printf '[rsync-poll] rsync completed; running again in %ss\n' "$interval" >&2
+  fi
+
+  sleep "$interval"
+  attempt=$((attempt + 1))
+done
