@@ -20,4 +20,8 @@ mtmux() {
   tmux attach -t "$session"
 }
 
-mtmux setup a1 a2 a3 a4 a5 a6 a7 a8
+if [ "$#" -gt 0 ]; then
+  mtmux setup "$@"
+else
+  mtmux setup a1 a2 a3 a4 a5 a6 a7 a8
+fi
